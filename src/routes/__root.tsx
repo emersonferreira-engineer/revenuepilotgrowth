@@ -77,15 +77,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "RevenuePilot — dados de e-commerce viram plano de ação" },
+      {
+        name: "description",
+        content:
+          "RevenuePilot transforma dados de e-commerce e marketing em diagnósticos priorizados e planos de ação para times de growth.",
+      },
+      { name: "author", content: "RevenuePilot" },
+      { property: "og:title", content: "RevenuePilot" },
+      {
+        property: "og:description",
+        content: "Diagnósticos priorizados e planos de ação para lojas DTC.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
+
     links: [
       {
         rel: "stylesheet",
