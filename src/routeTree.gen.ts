@@ -10,8 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ImportarRouteImport } from './routes/importar'
 import { Route as PlanosRouteImport } from './routes/planos'
+import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as OportunidadesIndexRouteImport } from './routes/oportunidades.index'
 import { Route as OportunidadesIdRouteImport } from './routes/oportunidades.$id'
 
@@ -20,14 +23,29 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ImportarRoute = ImportarRouteImport.update({
+  id: '/importar',
+  path: '/importar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlanosRoute = PlanosRouteImport.update({
   id: '/planos',
   path: '/planos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SobreRoute = SobreRouteImport.update({
+  id: '/sobre',
+  path: '/sobre',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OportunidadesIndexRoute = OportunidadesIndexRouteImport.update({
@@ -43,45 +61,75 @@ const OportunidadesIdRoute = OportunidadesIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/configuracoes': typeof ConfiguracoesRoute
   '/dashboard': typeof DashboardRoute
+  '/importar': typeof ImportarRoute
   '/planos': typeof PlanosRoute
+  '/sobre': typeof SobreRoute
   '/oportunidades/$id': typeof OportunidadesIdRoute
   '/oportunidades/': typeof OportunidadesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/configuracoes': typeof ConfiguracoesRoute
   '/dashboard': typeof DashboardRoute
+  '/importar': typeof ImportarRoute
   '/planos': typeof PlanosRoute
+  '/sobre': typeof SobreRoute
   '/oportunidades/$id': typeof OportunidadesIdRoute
   '/oportunidades': typeof OportunidadesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/configuracoes': typeof ConfiguracoesRoute
   '/dashboard': typeof DashboardRoute
+  '/importar': typeof ImportarRoute
   '/planos': typeof PlanosRoute
+  '/sobre': typeof SobreRoute
   '/oportunidades/$id': typeof OportunidadesIdRoute
   '/oportunidades/': typeof OportunidadesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/dashboard' | '/planos' | '/oportunidades/$id' | '/oportunidades/'
+    | '/'
+    | '/configuracoes'
+    | '/dashboard'
+    | '/importar'
+    | '/planos'
+    | '/sobre'
+    | '/oportunidades/$id'
+    | '/oportunidades/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/planos' | '/oportunidades/$id' | '/oportunidades'
+  to:
+    | '/'
+    | '/configuracoes'
+    | '/dashboard'
+    | '/importar'
+    | '/planos'
+    | '/sobre'
+    | '/oportunidades/$id'
+    | '/oportunidades'
   id:
     | '__root__'
     | '/'
+    | '/configuracoes'
     | '/dashboard'
+    | '/importar'
     | '/planos'
+    | '/sobre'
     | '/oportunidades/$id'
     | '/oportunidades/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ConfiguracoesRoute: typeof ConfiguracoesRoute
   DashboardRoute: typeof DashboardRoute
+  ImportarRoute: typeof ImportarRoute
   PlanosRoute: typeof PlanosRoute
+  SobreRoute: typeof SobreRoute
   OportunidadesIdRoute: typeof OportunidadesIdRoute
   OportunidadesIndexRoute: typeof OportunidadesIndexRoute
 }
@@ -95,6 +143,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/configuracoes': {
+      id: '/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof ConfiguracoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -102,11 +157,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/importar': {
+      id: '/importar'
+      path: '/importar'
+      fullPath: '/importar'
+      preLoaderRoute: typeof ImportarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/planos': {
       id: '/planos'
       path: '/planos'
       fullPath: '/planos'
       preLoaderRoute: typeof PlanosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sobre': {
+      id: '/sobre'
+      path: '/sobre'
+      fullPath: '/sobre'
+      preLoaderRoute: typeof SobreRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/oportunidades/': {
@@ -128,8 +197,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ConfiguracoesRoute: ConfiguracoesRoute,
   DashboardRoute: DashboardRoute,
+  ImportarRoute: ImportarRoute,
   PlanosRoute: PlanosRoute,
+  SobreRoute: SobreRoute,
   OportunidadesIdRoute: OportunidadesIdRoute,
   OportunidadesIndexRoute: OportunidadesIndexRoute,
 }
