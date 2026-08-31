@@ -1,11 +1,49 @@
 export type Currency = "BRL" | "USD" | "EUR";
 
+export type TrafficChannel =
+  | "meta_ads"
+  | "google_ads"
+  | "tiktok_ads"
+  | "organic"
+  | "email"
+  | "direct";
+
+export type PaidChannel = Extract<TrafficChannel, "meta_ads" | "google_ads" | "tiktok_ads">;
+
+export const TRAFFIC_CHANNELS: TrafficChannel[] = [
+  "meta_ads",
+  "google_ads",
+  "tiktok_ads",
+  "organic",
+  "email",
+  "direct",
+];
+
+export const PAID_CHANNELS: PaidChannel[] = ["meta_ads", "google_ads", "tiktok_ads"];
+
+export const CHANNEL_LABEL: Record<TrafficChannel, string> = {
+  meta_ads: "Meta Ads",
+  google_ads: "Google Ads",
+  tiktok_ads: "TikTok Ads",
+  organic: "Busca orgânica",
+  email: "E-mail e CRM",
+  direct: "Direto e referências",
+};
+
+/** A store is the tenant unit: its own dataset, metrics and opportunities. */
 export interface Store {
   id: string;
   name: string;
+  segment: string;
   currency: Currency;
   defaultPeriodDays: number;
+  /** Seed of the synthetic generator: same seed, same numbers. */
+  seed: number;
+  monthlySessions: number;
+  baselineConversionPct: number;
+  monthlyAdBudget: number;
   demoMode: boolean;
+  createdAt: string;
 }
 
 export interface Product {
@@ -27,18 +65,19 @@ export interface Order {
   customerId: string;
   revenue: number;
   items: OrderItem[];
-  channel: "paid" | "organic" | "email" | "direct";
+  channel: TrafficChannel;
 }
 
 export interface DailyTraffic {
   date: string;
   sessions: number;
+  byChannel: Record<TrafficChannel, number>;
 }
 
 export interface Campaign {
   id: string;
   date: string;
-  channel: "Meta Ads" | "Google Ads" | "TikTok Ads";
+  channel: PaidChannel;
   spend: number;
   clicks: number;
   conversions: number;
@@ -67,6 +106,8 @@ export interface Dataset {
   customers: CustomerSummary[];
   source: DatasetSource;
 }
+
+export type ChannelOpportunityMeta = { channel: TrafficChannel };
 
 export type Confidence = "baixo" | "medio" | "alto";
 export type OpportunityCategory = "conversao" | "aquisicao" | "produto" | "retencao";
@@ -110,6 +151,16 @@ export interface AiRecommendation {
   metricas_de_sucesso: string[];
 }
 
+export interface AiExchange {
+  result: AiRecommendation;
+  source: "n8n" | "demo";
+  at: string;
+  requestPayload: unknown;
+  rawResponse: string | null;
+  webhookUrl: string | null;
+  durationMs: number | null;
+}
+
 export interface ActionTask {
   id: string;
   title: string;
@@ -149,31 +200,54 @@ export interface AuditEvent {
 }
 
 export interface AppSettings {
-  storeName: string;
-  currency: Currency;
-  defaultPeriodDays: number;
   webhookUrl: string;
-  demoMode: boolean;
   notifyOnNewOpportunity: boolean;
   thresholds: {
     conversionDropPct: number;
     cacIncreasePct: number;
     productDropPct: number;
     inactiveDays: number;
+    channelDropPct: number;
   };
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
-  storeName: "Aurora Home",
-  currency: "BRL",
-  defaultPeriodDays: 30,
   webhookUrl: "",
-  demoMode: true,
   notifyOnNewOpportunity: true,
   thresholds: {
     conversionDropPct: 8,
     cacIncreasePct: 15,
     productDropPct: 25,
     inactiveDays: 60,
+    channelDropPct: 12,
   },
 };
+
+export const DEFAULT_STORES: Store[] = [
+  {
+    id: "store-aurora-home",
+    name: "Aurora Home",
+    segment: "Casa e decoração",
+    currency: "BRL",
+    defaultPeriodDays: 30,
+    seed: 20260815,
+    monthlySessions: 45000,
+    baselineConversionPct: 2.6,
+    monthlyAdBudget: 95000,
+    demoMode: true,
+    createdAt: "2026-01-10",
+  },
+  {
+    id: "store-nord-supply",
+    name: "Nord Supply Co.",
+    segment: "Moda outdoor",
+    currency: "BRL",
+    defaultPeriodDays: 30,
+    seed: 771302,
+    monthlySessions: 28000,
+    baselineConversionPct: 1.9,
+    monthlyAdBudget: 52000,
+    demoMode: true,
+    createdAt: "2026-03-02",
+  },
+];
