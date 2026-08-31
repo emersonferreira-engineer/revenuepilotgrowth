@@ -1,5 +1,5 @@
 import { addDays, daysBetween } from "@/lib/data/demo-dataset";
-import type { Dataset } from "@/lib/domain/types";
+import { TRAFFIC_CHANNELS, type Dataset, type TrafficChannel } from "@/lib/domain/types";
 
 export interface PeriodWindow {
   start: string;
@@ -114,4 +114,88 @@ export function productRevenue(dataset: Dataset, w: PeriodWindow) {
     }
   }
   return totals;
+}
+export interface ChannelMetrics {
+  channel: TrafficChannel;
+  sessions: number;
+  orders: number;
+  revenue: number;
+  conversionRate: number;
+  spend: number;
+  cac: number | null;
+  roas: number | null;
+}
+
+export interface ChannelComparison {
+  channel: TrafficChannel;
+  current: ChannelMetrics;
+  previous: ChannelMetrics;
+  revenueChange: number | null;
+  conversionChange: number | null;
+  cacChange: number | null;
+}
+
+function emptyChannelMetrics(channel: TrafficChannel): ChannelMetrics {
+  return {
+    channel,
+    sessions: 0,
+    orders: 0,
+    revenue: 0,
+    conversionRate: 0,
+    spend: 0,
+    cac: null,
+    roas: null,
+  };
+}
+
+/** Revenue, conversion and CAC per traffic channel inside a window. */
+export function channelMetrics(dataset: Dataset, w: PeriodWindow): ChannelMetrics[] {
+  const acc = new Map<TrafficChannel, ChannelMetrics>(
+    TRAFFIC_CHANNELS.map((c) => [c, emptyChannelMetrics(c)]),
+  );
+
+  for (const t of dataset.traffic) {
+    if (!inWindow(t.date, w)) continue;
+    for (const ch of TRAFFIC_CHANNELS) acc.get(ch)!.sessions += t.byChannel[ch] ?? 0;
+  }
+  for (const o of dataset.orders) {
+    if (!inWindow(o.date, w)) continue;
+    const row = acc.get(o.channel);
+    if (!row) continue;
+    row.orders += 1;
+    row.revenue += o.revenue;
+  }
+  for (const c of dataset.campaigns) {
+    if (!inWindow(c.date, w)) continue;
+    acc.get(c.channel)!.spend += c.spend;
+  }
+
+  return TRAFFIC_CHANNELS.map((ch) => {
+    const row = acc.get(ch)!;
+    row.conversionRate = row.sessions ? row.orders / row.sessions : 0;
+    row.cac = row.spend > 0 && row.orders > 0 ? row.spend / row.orders : null;
+    row.roas = row.spend > 0 ? row.revenue / row.spend : null;
+    return row;
+  });
+}
+
+export function compareChannels(
+  dataset: Dataset,
+  todayIso: string,
+  periodDays: number,
+): ChannelComparison[] {
+  const windows = buildWindows(todayIso, periodDays);
+  const cur = channelMetrics(dataset, windows.current);
+  const prev = channelMetrics(dataset, windows.previous);
+  return cur.map((c, i) => {
+    const p = prev[i]!;
+    return {
+      channel: c.channel,
+      current: c,
+      previous: p,
+      revenueChange: delta(c.revenue, p.revenue),
+      conversionChange: delta(c.conversionRate, p.conversionRate),
+      cacChange: c.cac !== null && p.cac !== null ? delta(c.cac, p.cac) : null,
+    };
+  });
 }
