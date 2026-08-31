@@ -1,6 +1,12 @@
-import { buildWindows, compareMetrics, delta, productRevenue } from "@/lib/analytics/metrics";
+import {
+  buildWindows,
+  compareChannels,
+  compareMetrics,
+  delta,
+  productRevenue,
+} from "@/lib/analytics/metrics";
 import { daysBetween } from "@/lib/data/demo-dataset";
-import type { AppSettings, Dataset, Opportunity } from "@/lib/domain/types";
+import { CHANNEL_LABEL, PAID_CHANNELS, type AppSettings, type Dataset, type Opportunity, type PaidChannel } from "@/lib/domain/types";
 
 const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
 
@@ -18,7 +24,7 @@ export function detectConversionDrop(
   todayIso: string,
   settings: AppSettings,
 ): Opportunity | null {
-  const { current, previous } = compareMetrics(dataset, todayIso, settings.defaultPeriodDays);
+  const { current, previous } = compareMetrics(dataset, todayIso, dataset.store.defaultPeriodDays);
   const change = delta(current.conversionRate, previous.conversionRate);
   if (change === null || change > -settings.thresholds.conversionDropPct / 100) return null;
 
@@ -56,7 +62,7 @@ export function detectConversionDrop(
     ],
     dataUsed: ["orders (pedidos diários)", "traffic (sessões diárias)"],
     periodLabel: `${current.window.label} vs ${previous.window.label}`,
-    recordRefs: [`orders: ${current.orders} registros`, `traffic: ${settings.defaultPeriodDays} dias`],
+    recordRefs: [`orders: ${current.orders} registros`, `traffic: ${dataset.store.defaultPeriodDays} dias`],
     createdAt: todayIso,
   };
 }
@@ -67,7 +73,7 @@ export function detectAcquisitionEfficiency(
   todayIso: string,
   settings: AppSettings,
 ): Opportunity | null {
-  const { current, previous } = compareMetrics(dataset, todayIso, settings.defaultPeriodDays);
+  const { current, previous } = compareMetrics(dataset, todayIso, dataset.store.defaultPeriodDays);
   if (current.cac === null || previous.cac === null) return null;
   const cacChange = delta(current.cac, previous.cac);
   const roasChange =
@@ -114,7 +120,7 @@ export function detectProductDrop(
   todayIso: string,
   settings: AppSettings,
 ): Opportunity | null {
-  const windows = buildWindows(todayIso, settings.defaultPeriodDays);
+  const windows = buildWindows(todayIso, dataset.store.defaultPeriodDays);
   const cur = productRevenue(dataset, windows.current);
   const prev = productRevenue(dataset, windows.previous);
 
@@ -209,6 +215,86 @@ export function detectRetentionOpportunity(
   };
 }
 
+/** Rule 5 — one opportunity per traffic channel losing revenue or conversion. */
+export function detectChannelDrops(
+  dataset: Dataset,
+  todayIso: string,
+  settings: AppSettings,
+): Opportunity[] {
+  const limit = settings.thresholds.channelDropPct / 100;
+  const rows = compareChannels(dataset, todayIso, dataset.store.defaultPeriodDays);
+
+  return rows
+    .filter((r) => r.previous.revenue > 0)
+    .filter(
+      (r) =>
+        (r.revenueChange !== null && r.revenueChange <= -limit) ||
+        (r.conversionChange !== null && r.conversionChange <= -limit),
+    )
+    .map((r) => {
+      const label = CHANNEL_LABEL[r.channel];
+      const isPaid = (PAID_CHANNELS as PaidChannel[]).includes(r.channel as PaidChannel);
+      const impact = Math.max(0, r.previous.revenue - r.current.revenue);
+      const sessionChange = delta(r.current.sessions, r.previous.sessions);
+
+      return {
+        id: `opp-canal-${r.channel}`,
+        title: `Queda no canal ${label}`,
+        category: isPaid ? "aquisicao" : "conversao",
+        severity: (r.revenueChange ?? 0) < -0.3 ? "critico" : "atencao",
+        diagnosis: `A receita de ${label} foi de ${formatMoney(r.previous.revenue, dataset.store.currency)} para ${formatMoney(r.current.revenue, dataset.store.currency)} (${pct(r.revenueChange ?? 0)}). Sessões variaram ${pct(sessionChange ?? 0)} e a conversão do canal saiu de ${pct(r.previous.conversionRate)} para ${pct(r.current.conversionRate)}${r.current.cac !== null && r.previous.cac !== null ? `, com CAC de ${formatMoney(r.previous.cac, dataset.store.currency)} para ${formatMoney(r.current.cac, dataset.store.currency)}` : ""}.`,
+        hypothesis: isPaid
+          ? `A perda em ${label} vem de saturação de criativo e leilão mais caro: menos cliques qualificados pelo mesmo investimento, o que derruba conversão e eleva o CAC.`
+          : `A perda em ${label} vem de queda de alcance da própria fonte (posicionamento, entregabilidade ou sazonalidade), não de um problema geral do site.`,
+        recommendation: isPaid
+          ? `Revisar os conjuntos de ${label} com CAC acima da média do canal, renovar criativos e testar realocar 20% do investimento para o canal com melhor CAC no período.`
+          : `Investigar a origem do tráfego de ${label} (páginas de entrada, campanhas de CRM ou posições de busca perdidas) e reativar as peças que traziam volume no período anterior.`,
+        estimatedImpact: impact,
+        impactBasis: `Estimativa: receita do canal no período anterior (${formatMoney(r.previous.revenue, dataset.store.currency)}) menos a receita atual (${formatMoney(r.current.revenue, dataset.store.currency)}), assumindo recuperação total do patamar.`,
+        effort: isPaid ? "baixo" : "medio",
+        confidence: (r.revenueChange ?? 0) < -0.25 ? "alto" : "medio",
+        risks: [
+          "Parte da demanda pode ter migrado para outro canal (canibalização), reduzindo o ganho real.",
+          "Atribuição de último clique subestima canais de descoberta.",
+        ],
+        successMetrics: [
+          `Receita de ${label} no próximo período`,
+          `Conversão de sessões de ${label}`,
+          isPaid ? `CAC de ${label}` : `Sessões de ${label}`,
+        ],
+        evidences: [
+          {
+            label: "Receita do canal",
+            value: formatMoney(r.current.revenue, dataset.store.currency),
+            comparison: `antes ${formatMoney(r.previous.revenue, dataset.store.currency)}`,
+          },
+          {
+            label: "Sessões",
+            value: r.current.sessions.toLocaleString("pt-BR"),
+            comparison: `antes ${r.previous.sessions.toLocaleString("pt-BR")}`,
+          },
+          {
+            label: "Conversão",
+            value: pct(r.current.conversionRate),
+            comparison: `antes ${pct(r.previous.conversionRate)}`,
+          },
+          {
+            label: "CAC",
+            value: r.current.cac === null ? "—" : formatMoney(r.current.cac, dataset.store.currency),
+            comparison:
+              r.previous.cac === null
+                ? "sem investimento no canal"
+                : `antes ${formatMoney(r.previous.cac, dataset.store.currency)}`,
+          },
+        ],
+        dataUsed: ["traffic.byChannel (sessões por canal)", "orders.channel", "campaigns (investimento por canal)"],
+        periodLabel: `${buildWindows(todayIso, dataset.store.defaultPeriodDays).current.label} vs ${buildWindows(todayIso, dataset.store.defaultPeriodDays).previous.label}`,
+        recordRefs: [`channel: ${r.channel}`, `orders: ${r.current.orders} no período`],
+        createdAt: todayIso,
+      } satisfies Opportunity;
+    });
+}
+
 export function runDiagnostics(
   dataset: Dataset,
   todayIso: string,
@@ -219,7 +305,9 @@ export function runDiagnostics(
     detectAcquisitionEfficiency(dataset, todayIso, settings),
     detectProductDrop(dataset, todayIso, settings),
     detectRetentionOpportunity(dataset, todayIso, settings),
+    ...detectChannelDrops(dataset, todayIso, settings),
   ]
     .filter((o): o is Opportunity => o !== null)
+    .map((o) => ({ ...o, id: `${dataset.store.id}__${o.id}` }))
     .sort((a, b) => b.estimatedImpact - a.estimatedImpact);
 }
