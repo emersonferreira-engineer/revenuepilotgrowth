@@ -228,6 +228,22 @@ function OpportunityDetail() {
                 .
               </p>
             ) : null}
+            <details className="mt-3">
+              <summary className="cursor-pointer text-xs text-primary">
+                Ver o payload que será enviado ao n8n (dados reais desta oportunidade)
+              </summary>
+              <pre className="mt-2 max-h-80 overflow-auto rounded-md bg-muted p-3 text-xs">
+                {JSON.stringify(buildPayload(), null, 2)}
+              </pre>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Monte o workflow que consome este payload no{" "}
+                <Link to="/integracao-n8n" className="underline">
+                  guia de integração n8n
+                </Link>
+                .
+              </p>
+            </details>
+
             {ai ? (
               <div className="mt-4 space-y-2 rounded-lg border border-border p-4 text-sm">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
