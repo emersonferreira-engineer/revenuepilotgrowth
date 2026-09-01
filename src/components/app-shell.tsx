@@ -1,9 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { Gauge, Lightbulb, ListChecks, Upload, Settings, Info, Rocket } from "lucide-react";
+import { Gauge, Lightbulb, ListChecks, Upload, Settings, Info, Rocket, Store } from "lucide-react";
+import { useAppStore } from "@/lib/data/app-store";
 
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: Gauge },
+  { to: "/lojas", label: "Lojas", icon: Store },
   { to: "/oportunidades", label: "Oportunidades", icon: Lightbulb },
   { to: "/planos", label: "Planos de ação", icon: ListChecks },
   { to: "/importar", label: "Importar dados", icon: Upload },
@@ -44,6 +46,7 @@ export function AppShell({
               </Link>
             ))}
           </nav>
+          <StoreSwitcher />
         </div>
       </header>
 
@@ -64,6 +67,28 @@ export function AppShell({
         MVP demonstrativo. Os dados são sintéticos e os impactos são estimativas, não garantias.
       </footer>
     </div>
+  );
+}
+
+function StoreSwitcher() {
+  const { stores, activeStoreId, setActiveStore, hydrated } = useAppStore();
+  return (
+    <label className="flex items-center gap-2 text-xs text-muted-foreground">
+      <span className="hidden sm:inline">Loja</span>
+      <select
+        aria-label="Trocar de loja"
+        value={activeStoreId}
+        disabled={!hydrated}
+        onChange={(e) => setActiveStore(e.target.value)}
+        className="rounded-md border border-input bg-background px-2 py-1.5 text-sm text-foreground"
+      >
+        {stores.map((s) => (
+          <option key={s.id} value={s.id}>
+            {s.name}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 
