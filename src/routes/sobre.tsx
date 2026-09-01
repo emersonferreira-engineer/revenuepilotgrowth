@@ -41,9 +41,11 @@ function AboutPage() {
         <section className="rounded-xl border border-border bg-card p-5">
           <h2 className="text-sm font-semibold text-foreground">Origem dos dados</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            O dataset é sintético e gerado por um PRNG determinístico, então servidor e navegador
-            veem os mesmos números. Ele simula pedidos, sessões, campanhas e clientes de uma loja DTC
-            fictícia. Nenhum dado real de loja é usado.
+            O dataset é sintético e gerado por um PRNG determinístico: mesma seed produz os mesmos
+            números, então servidor e navegador veem dados idênticos. Cada loja tem seu próprio seed
+            e catálogo. Vêm duas lojas de demonstração (*Aurora Home* e *Nord Supply Co.*), cada uma
+            com 90 dias de pedidos, sessões por canal de tráfego, campanhas e clientes. Nenhum dado
+            real de loja é usado.
           </p>
         </section>
 
@@ -54,6 +56,7 @@ function AboutPage() {
             <li>Eficiência de aquisição: CAC e ROAS comparados ao período anterior.</li>
             <li>Produto com queda relevante de receita no período.</li>
             <li>Base de clientes inativos há mais dias que o limiar.</li>
+            <li>Queda por canal de tráfego (pago ou orgânico) acima do limiar, com CAC quando aplicável.</li>
           </ul>
           <p className="mt-3 text-sm text-muted-foreground">
             Todo impacto exibido é uma estimativa aritmética simples, com a premissa declarada junto
