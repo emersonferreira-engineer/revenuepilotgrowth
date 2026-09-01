@@ -69,9 +69,12 @@ tenant e RLS por usuário.
 2. **Eficiência de aquisição** — aumento de CAC ou queda de ROAS com dados de campanha.
 3. **Queda por produto** — SKU com perda relevante de receita no período.
 4. **Retenção** — clientes inativos há mais dias que o limiar, com potencial de recompra.
+5. **Queda por canal** — um diagnóstico por canal de tráfego (pago ou orgânico) cuja receita ou
+   conversão caiu acima do limiar `channelDropPct`, com CAC quando aplicável.
 
 Cada oportunidade declara período analisado, dados utilizados, hipótese, nível de confiança,
-riscos, métricas de sucesso e a premissa por trás do impacto estimado.
+riscos, métricas de sucesso e a premissa por trás do impacto estimado. O limiar
+`channelDropPct` (padrão 12%) controla a regra por canal.
 
 ## Integração n8n
 
