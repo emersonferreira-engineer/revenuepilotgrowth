@@ -39,15 +39,15 @@ export const STATUS_LABEL: Record<OpportunityStatus, string> = {
 };
 
 function OpportunitiesPage() {
-  const { opportunities, statuses, settings, hydrated } = useAppStore();
+  const { opportunities, statuses, activeStore, hydrated } = useAppStore();
   const [category, setCategory] = useState<"todas" | OpportunityCategory>("todas");
 
   const list = opportunities.filter((o) => category === "todas" || o.category === category);
-  const money = (v: number) => formatMoney(v, settings.currency);
+  const money = (v: number) => formatMoney(v, activeStore.currency);
 
   return (
     <AppShell
-      title="Oportunidades"
+      title={`Oportunidades — ${activeStore.name}`}
       description="Ordenadas por impacto estimado. Cada item declara a evidência usada, o esforço e o nível de confiança."
     >
       <DemoBanner />

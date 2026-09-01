@@ -1,10 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { useAppStore } from "@/lib/data/app-store";
 import { testWebhook } from "@/lib/ai/n8n.functions";
-import type { Currency } from "@/lib/domain/types";
 
 export const Route = createFileRoute("/configuracoes")({
   head: () => ({
@@ -26,7 +25,7 @@ export const Route = createFileRoute("/configuracoes")({
 });
 
 function SettingsPage() {
-  const { settings, updateSettings, audit, resetDemo, log } = useAppStore();
+  const { settings, updateSettings, audit, resetDemo, log, activeStore } = useAppStore();
   const [testing, setTesting] = useState(false);
 
   const field = "mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
@@ -53,40 +52,20 @@ function SettingsPage() {
     >
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-xl border border-border bg-card p-5">
-          <h2 className="text-sm font-semibold text-foreground">Loja e período</h2>
-          <label className="mt-4 block text-xs text-muted-foreground">
-            Nome da loja
-            <input
-              className={field}
-              value={settings.storeName}
-              onChange={(e) => updateSettings({ storeName: e.target.value })}
-            />
-          </label>
-          <label className="mt-3 block text-xs text-muted-foreground">
-            Moeda
-            <select
-              className={field}
-              value={settings.currency}
-              onChange={(e) => updateSettings({ currency: e.target.value as Currency })}
-            >
-              <option value="BRL">BRL</option>
-              <option value="USD">USD</option>
-              <option value="EUR">EUR</option>
-            </select>
-          </label>
-          <label className="mt-3 block text-xs text-muted-foreground">
-            Período padrão (dias)
-            <input
-              type="number"
-              min={7}
-              max={90}
-              className={field}
-              value={settings.defaultPeriodDays}
-              onChange={(e) =>
-                updateSettings({ defaultPeriodDays: Math.max(7, Number(e.target.value) || 30) })
-              }
-            />
-          </label>
+          <h2 className="text-sm font-semibold text-foreground">Loja ativa</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {activeStore.name} · {activeStore.currency} · janela de {activeStore.defaultPeriodDays}{" "}
+            dias.
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Nome, moeda, período e parâmetros de geração de dados são editados na tela de Lojas.
+          </p>
+          <Link
+            to="/lojas"
+            className="mt-3 inline-flex rounded-md border border-input px-3 py-1.5 text-sm hover:bg-accent"
+          >
+            Gerenciar lojas
+          </Link>
         </section>
 
         <section className="rounded-xl border border-border bg-card p-5">
@@ -97,6 +76,7 @@ function SettingsPage() {
               ["cacIncreasePct", "Aumento de CAC (%)"],
               ["productDropPct", "Queda por produto (%)"],
               ["inactiveDays", "Dias para cliente inativo"],
+              ["channelDropPct", "Queda por canal de tráfego (%)"],
             ] as const
           ).map(([key, label]) => (
             <label key={key} className="mt-3 block text-xs text-muted-foreground">
