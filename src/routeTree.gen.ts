@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ImportarRouteImport } from './routes/importar'
+import { Route as LojasRouteImport } from './routes/lojas'
 import { Route as PlanosRouteImport } from './routes/planos'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as OportunidadesIndexRouteImport } from './routes/oportunidades.index'
@@ -36,6 +37,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const ImportarRoute = ImportarRouteImport.update({
   id: '/importar',
   path: '/importar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LojasRoute = LojasRouteImport.update({
+  id: '/lojas',
+  path: '/lojas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlanosRoute = PlanosRouteImport.update({
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof ConfiguracoesRoute
   '/dashboard': typeof DashboardRoute
   '/importar': typeof ImportarRoute
+  '/lojas': typeof LojasRoute
   '/planos': typeof PlanosRoute
   '/sobre': typeof SobreRoute
   '/oportunidades/$id': typeof OportunidadesIdRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof ConfiguracoesRoute
   '/dashboard': typeof DashboardRoute
   '/importar': typeof ImportarRoute
+  '/lojas': typeof LojasRoute
   '/planos': typeof PlanosRoute
   '/sobre': typeof SobreRoute
   '/oportunidades/$id': typeof OportunidadesIdRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/configuracoes': typeof ConfiguracoesRoute
   '/dashboard': typeof DashboardRoute
   '/importar': typeof ImportarRoute
+  '/lojas': typeof LojasRoute
   '/planos': typeof PlanosRoute
   '/sobre': typeof SobreRoute
   '/oportunidades/$id': typeof OportunidadesIdRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/dashboard'
     | '/importar'
+    | '/lojas'
     | '/planos'
     | '/sobre'
     | '/oportunidades/$id'
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/dashboard'
     | '/importar'
+    | '/lojas'
     | '/planos'
     | '/sobre'
     | '/oportunidades/$id'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/dashboard'
     | '/importar'
+    | '/lojas'
     | '/planos'
     | '/sobre'
     | '/oportunidades/$id'
@@ -128,6 +140,7 @@ export interface RootRouteChildren {
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   DashboardRoute: typeof DashboardRoute
   ImportarRoute: typeof ImportarRoute
+  LojasRoute: typeof LojasRoute
   PlanosRoute: typeof PlanosRoute
   SobreRoute: typeof SobreRoute
   OportunidadesIdRoute: typeof OportunidadesIdRoute
@@ -162,6 +175,13 @@ declare module '@tanstack/react-router' {
       path: '/importar'
       fullPath: '/importar'
       preLoaderRoute: typeof ImportarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lojas': {
+      id: '/lojas'
+      path: '/lojas'
+      fullPath: '/lojas'
+      preLoaderRoute: typeof LojasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/planos': {
@@ -200,6 +220,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConfiguracoesRoute: ConfiguracoesRoute,
   DashboardRoute: DashboardRoute,
   ImportarRoute: ImportarRoute,
+  LojasRoute: LojasRoute,
   PlanosRoute: PlanosRoute,
   SobreRoute: SobreRoute,
   OportunidadesIdRoute: OportunidadesIdRoute,
