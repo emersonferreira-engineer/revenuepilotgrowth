@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ImportarRouteImport } from './routes/importar'
+import { Route as IntegracaoN8nRouteImport } from './routes/integracao-n8n'
 import { Route as LojasRouteImport } from './routes/lojas'
 import { Route as PlanosRouteImport } from './routes/planos'
 import { Route as SobreRouteImport } from './routes/sobre'
@@ -37,6 +38,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const ImportarRoute = ImportarRouteImport.update({
   id: '/importar',
   path: '/importar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntegracaoN8nRoute = IntegracaoN8nRouteImport.update({
+  id: '/integracao-n8n',
+  path: '/integracao-n8n',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LojasRoute = LojasRouteImport.update({
@@ -70,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof ConfiguracoesRoute
   '/dashboard': typeof DashboardRoute
   '/importar': typeof ImportarRoute
+  '/integracao-n8n': typeof IntegracaoN8nRoute
   '/lojas': typeof LojasRoute
   '/planos': typeof PlanosRoute
   '/sobre': typeof SobreRoute
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof ConfiguracoesRoute
   '/dashboard': typeof DashboardRoute
   '/importar': typeof ImportarRoute
+  '/integracao-n8n': typeof IntegracaoN8nRoute
   '/lojas': typeof LojasRoute
   '/planos': typeof PlanosRoute
   '/sobre': typeof SobreRoute
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/configuracoes': typeof ConfiguracoesRoute
   '/dashboard': typeof DashboardRoute
   '/importar': typeof ImportarRoute
+  '/integracao-n8n': typeof IntegracaoN8nRoute
   '/lojas': typeof LojasRoute
   '/planos': typeof PlanosRoute
   '/sobre': typeof SobreRoute
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/dashboard'
     | '/importar'
+    | '/integracao-n8n'
     | '/lojas'
     | '/planos'
     | '/sobre'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/dashboard'
     | '/importar'
+    | '/integracao-n8n'
     | '/lojas'
     | '/planos'
     | '/sobre'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/dashboard'
     | '/importar'
+    | '/integracao-n8n'
     | '/lojas'
     | '/planos'
     | '/sobre'
@@ -140,6 +152,7 @@ export interface RootRouteChildren {
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   DashboardRoute: typeof DashboardRoute
   ImportarRoute: typeof ImportarRoute
+  IntegracaoN8nRoute: typeof IntegracaoN8nRoute
   LojasRoute: typeof LojasRoute
   PlanosRoute: typeof PlanosRoute
   SobreRoute: typeof SobreRoute
@@ -175,6 +188,13 @@ declare module '@tanstack/react-router' {
       path: '/importar'
       fullPath: '/importar'
       preLoaderRoute: typeof ImportarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/integracao-n8n': {
+      id: '/integracao-n8n'
+      path: '/integracao-n8n'
+      fullPath: '/integracao-n8n'
+      preLoaderRoute: typeof IntegracaoN8nRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lojas': {
@@ -220,6 +240,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConfiguracoesRoute: ConfiguracoesRoute,
   DashboardRoute: DashboardRoute,
   ImportarRoute: ImportarRoute,
+  IntegracaoN8nRoute: IntegracaoN8nRoute,
   LojasRoute: LojasRoute,
   PlanosRoute: PlanosRoute,
   SobreRoute: SobreRoute,

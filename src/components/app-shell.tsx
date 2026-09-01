@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { Gauge, Lightbulb, ListChecks, Upload, Settings, Info, Rocket, Store } from "lucide-react";
+import { Gauge, Lightbulb, ListChecks, Upload, Settings, Info, Rocket, Store, Workflow } from "lucide-react";
 import { useAppStore } from "@/lib/data/app-store";
 
 const NAV = [
@@ -9,9 +9,11 @@ const NAV = [
   { to: "/oportunidades", label: "Oportunidades", icon: Lightbulb },
   { to: "/planos", label: "Planos de ação", icon: ListChecks },
   { to: "/importar", label: "Importar dados", icon: Upload },
+  { to: "/integracao-n8n", label: "Integração n8n", icon: Workflow },
   { to: "/configuracoes", label: "Configurações", icon: Settings },
   { to: "/sobre", label: "Sobre", icon: Info },
 ] as const;
+
 
 export function AppShell({
   title,
