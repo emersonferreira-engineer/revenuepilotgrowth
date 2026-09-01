@@ -12,16 +12,19 @@ dados espalhados entre plataforma de e-commerce e mídia paga e pouco tempo para
 ## Arquitetura
 
 - **TanStack Start (React 19 + Vite)** com rotas em `src/routes`.
-- **Camada de domínio** em `src/lib/domain/types.ts` — entidades: store, product, order, campaign,
-  customer, opportunity, action plan, import record, audit event, settings.
-- **Dados** em `src/lib/data/demo-dataset.ts` — dataset sintético determinístico da loja
-  demonstração *Aurora Home* (90 dias de pedidos, tráfego, campanhas e clientes). Substituível por
-  um banco real sem tocar nas telas.
+- **Camada de domínio** em `src/lib/domain/types.ts` — entidades: store, product, order (+`OrderItem`
+  com `channel`), `DailyTraffic` (+`byChannel`), campaign, customer, opportunity, action plan, import
+  record, audit event, settings. `TrafficChannel` cobre Meta/Google/TikTok Ads + orgânico, e-mail e
+  direto.
+- **Dados** em `src/lib/data/demo-dataset.ts` — dataset sintético determinístico por loja (mesma seed
+  → mesmos números). Vêm duas lojas de demonstração, *Aurora Home* e *Nord Supply Co.*, cada uma com
+  catálogo próprio e 90 dias de pedidos, tráfego por canal, campanhas e clientes. Substituível por um
+  banco real sem tocar nas telas.
 - **Analytics** em `src/lib/analytics/metrics.ts` — comparação período atual x anterior, série de
-  receita, AOV, CVR, CAC, ROAS.
-- **Motor de diagnóstico** em `src/lib/diagnostics/rules.ts` — quatro regras determinísticas.
+  receita, AOV, CVR, CAC, ROAS e métricas por canal de tráfego.
+- **Motor de diagnóstico** em `src/lib/diagnostics/rules.ts` — cinco regras determinísticas.
 - **Estado da aplicação** em `src/lib/data/app-store.tsx` — React Context persistido em
-  `localStorage` (`revenuepilot.state.v1`).
+  `localStorage` (`revenuepilot.state.v2`) com suporte a múltiplas lojas e troca de loja ativa.
 - **Adaptador de IA** em `src/lib/ai/n8n.functions.ts` — `createServerFn`, chamada server-side ao
   webhook n8n com validação Zod na entrada e na resposta.
 - **Importação CSV** em `src/lib/import/csv.ts` — parsing e validação linha a linha.
@@ -31,12 +34,13 @@ dados espalhados entre plataforma de e-commerce e mídia paga e pouco tempo para
 | Rota | Descrição |
 | --- | --- |
 | `/` | Landing page com proposta de valor e acesso à demonstração |
-| `/dashboard` | KPIs comparados, curva de receita e top oportunidades |
+| `/dashboard` | KPIs comparados, curva de receita, tabela por canal e top oportunidades |
+| `/lojas` | Lista de lojas, criação/edição/exclusão e troca da loja ativa |
 | `/importar` | Upload de CSV, modelo, validação e histórico |
 | `/oportunidades` | Lista priorizada por impacto, com filtro por categoria |
 | `/oportunidades/$id` | Detalhe: evidências, riscos, IA, status e criação de plano |
 | `/planos` | Tarefas com responsável, prazo, prioridade, métrica e comentários |
-| `/configuracoes` | Loja, moeda, período, limiares, webhook n8n e registro de atividades |
+| `/configuracoes` | Limiares de diagnóstico, webhook n8n e registro de atividades |
 | `/sobre` | Premissas, contrato de IA e limitações |
 
 ## Setup
@@ -65,9 +69,12 @@ tenant e RLS por usuário.
 2. **Eficiência de aquisição** — aumento de CAC ou queda de ROAS com dados de campanha.
 3. **Queda por produto** — SKU com perda relevante de receita no período.
 4. **Retenção** — clientes inativos há mais dias que o limiar, com potencial de recompra.
+5. **Queda por canal** — um diagnóstico por canal de tráfego (pago ou orgânico) cuja receita ou
+   conversão caiu acima do limiar `channelDropPct`, com CAC quando aplicável.
 
 Cada oportunidade declara período analisado, dados utilizados, hipótese, nível de confiança,
-riscos, métricas de sucesso e a premissa por trás do impacto estimado.
+riscos, métricas de sucesso e a premissa por trás do impacto estimado. O limiar
+`channelDropPct` (padrão 12%) controla a regra por canal.
 
 ## Integração n8n
 
