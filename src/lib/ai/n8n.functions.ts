@@ -32,7 +32,7 @@ const requestSchema = z.object({
 });
 
 export type N8nResponse =
-  | { ok: true; result: AiRecommendationDto }
+  | { ok: true; result: AiRecommendationDto; raw: string }
   | { ok: false; error: string; detail?: string };
 
 /** Server-side adapter for the n8n webhook. Nothing is called from the browser directly. */
@@ -89,7 +89,7 @@ export const requestAiAnalysis = createServerFn({ method: "POST" })
         detail: parsed.error.issues.map((i) => `${i.path.join(".") || "raiz"}: ${i.message}`).join(" | "),
       };
     }
-    return { ok: true, result: parsed.data };
+    return { ok: true, result: parsed.data, raw: text.slice(0, 4000) };
   });
 
 export const testWebhook = createServerFn({ method: "POST" })

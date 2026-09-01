@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { useAppStore } from "@/lib/data/app-store";
 import { formatMoney } from "@/lib/diagnostics/rules";
-import { requestAiAnalysis } from "@/lib/ai/n8n.functions";
+import { requestAiAnalysis, type AnalysisPayload } from "@/lib/ai/n8n.functions";
+import { buildWindows, compareMetrics } from "@/lib/analytics/metrics";
 import type { AiRecommendation, OpportunityStatus } from "@/lib/domain/types";
 
 export const Route = createFileRoute("/oportunidades/$id")({
@@ -46,6 +47,8 @@ function OpportunityDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const {
+    activeStore,
+    dataset,
     opportunities,
     statuses,
     setStatus,
@@ -54,6 +57,7 @@ function OpportunityDetail() {
     saveAiResult,
     createPlan,
     setImpactOverride,
+    todayIso,
     log,
     hydrated,
   } = useAppStore();
@@ -81,39 +85,70 @@ function OpportunityDetail() {
     );
   }
 
-  const money = (v: number) => formatMoney(v, settings.currency);
+  const money = (v: number) => formatMoney(v, activeStore.currency);
   const ai = aiResults[opportunity.id];
+
+  function buildPayload(): AnalysisPayload {
+    const windows = buildWindows(todayIso, activeStore.defaultPeriodDays);
+    const { current, previous } = compareMetrics(dataset, todayIso, activeStore.defaultPeriodDays);
+    return {
+      store_id: activeStore.id,
+      periodo: {
+        inicio: windows.current.start,
+        fim: windows.current.end,
+        comparacao: windows.previous.label,
+      },
+      tipo_de_oportunidade: opportunity!.category,
+      metricas: {
+        moeda: activeStore.currency,
+        receita_atual: Math.round(current.revenue),
+        receita_anterior: Math.round(previous.revenue),
+        pedidos_atual: current.orders,
+        pedidos_anterior: previous.orders,
+        conversao_atual: Number((current.conversionRate * 100).toFixed(3)),
+        conversao_anterior: Number((previous.conversionRate * 100).toFixed(3)),
+        investimento_midia: Math.round(current.adSpend),
+        cac_atual: current.cac === null ? null : Math.round(current.cac),
+        cac_anterior: previous.cac === null ? null : Math.round(previous.cac),
+        roas_atual: current.roas === null ? null : Number(current.roas.toFixed(2)),
+        impacto_estimado: Math.round(opportunity!.estimatedImpact),
+      },
+      evidencias: opportunity!.evidences.map((e) => ({
+        label: e.label,
+        value: e.comparison ? `${e.value} (${e.comparison})` : e.value,
+      })),
+      pergunta_de_analise: `${opportunity!.title}. ${opportunity!.hypothesis} Qual a ação com maior retorno nos próximos 14 dias?`,
+    };
+  }
 
   async function runAi() {
     if (!opportunity) return;
     setLoading(true);
+    const payload = buildPayload();
+    const startedAt = Date.now();
     try {
       if (!settings.webhookUrl) {
         const result = demoRecommendation(opportunity.title, opportunity.diagnosis);
-        saveAiResult(opportunity.id, result, "demo");
+        saveAiResult(opportunity.id, result, "demo", {
+          requestPayload: payload,
+          rawResponse: JSON.stringify(result, null, 2),
+          webhookUrl: null,
+          durationMs: Date.now() - startedAt,
+        });
         log("Análise IA (demo)", opportunity.title);
         toast.warning("Sem webhook configurado: resposta simulada em modo demonstração.");
         return;
       }
       const response = await requestAiAnalysis({
-        data: {
-          webhookUrl: settings.webhookUrl,
-          payload: {
-            store_id: settings.storeName,
-            periodo: {
-              inicio: opportunity.periodLabel,
-              fim: opportunity.periodLabel,
-              comparacao: "periodo anterior equivalente",
-            },
-            tipo_de_oportunidade: opportunity.category,
-            metricas: { impacto_estimado: opportunity.estimatedImpact },
-            evidencias: opportunity.evidences.map((e) => ({ label: e.label, value: e.value })),
-            pergunta_de_analise: `${opportunity.title}. ${opportunity.hypothesis}`,
-          },
-        },
+        data: { webhookUrl: settings.webhookUrl, payload },
       });
       if (response.ok) {
-        saveAiResult(opportunity.id, response.result, "n8n");
+        saveAiResult(opportunity.id, response.result, "n8n", {
+          requestPayload: payload,
+          rawResponse: response.raw ?? JSON.stringify(response.result, null, 2),
+          webhookUrl: settings.webhookUrl,
+          durationMs: Date.now() - startedAt,
+        });
         log("Análise IA (n8n)", opportunity.title);
         toast.success("Análise recebida do n8n.");
       } else {
@@ -218,6 +253,28 @@ function OpportunityDetail() {
                 <p className="text-muted-foreground">
                   Métricas: {ai.result.metricas_de_sucesso.join("; ")}
                 </p>
+                {ai.webhookUrl ? (
+                  <p className="text-xs text-muted-foreground">
+                    Webhook: {ai.webhookUrl}
+                    {ai.durationMs !== null ? ` · ${ai.durationMs} ms` : ""}
+                  </p>
+                ) : null}
+                <details className="mt-2">
+                  <summary className="cursor-pointer text-xs text-primary">
+                    Ver payload enviado
+                  </summary>
+                  <pre className="mt-2 max-h-72 overflow-auto rounded-md bg-muted p-3 text-xs">
+                    {JSON.stringify(ai.requestPayload, null, 2)}
+                  </pre>
+                </details>
+                <details>
+                  <summary className="cursor-pointer text-xs text-primary">
+                    Ver resposta bruta do webhook
+                  </summary>
+                  <pre className="mt-2 max-h-72 overflow-auto rounded-md bg-muted p-3 text-xs">
+                    {ai.rawResponse ?? "—"}
+                  </pre>
+                </details>
               </div>
             ) : null}
           </section>
