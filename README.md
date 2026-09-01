@@ -34,12 +34,13 @@ dados espalhados entre plataforma de e-commerce e mídia paga e pouco tempo para
 | Rota | Descrição |
 | --- | --- |
 | `/` | Landing page com proposta de valor e acesso à demonstração |
-| `/dashboard` | KPIs comparados, curva de receita e top oportunidades |
+| `/dashboard` | KPIs comparados, curva de receita, tabela por canal e top oportunidades |
+| `/lojas` | Lista de lojas, criação/edição/exclusão e troca da loja ativa |
 | `/importar` | Upload de CSV, modelo, validação e histórico |
 | `/oportunidades` | Lista priorizada por impacto, com filtro por categoria |
 | `/oportunidades/$id` | Detalhe: evidências, riscos, IA, status e criação de plano |
 | `/planos` | Tarefas com responsável, prazo, prioridade, métrica e comentários |
-| `/configuracoes` | Loja, moeda, período, limiares, webhook n8n e registro de atividades |
+| `/configuracoes` | Limiares de diagnóstico, webhook n8n e registro de atividades |
 | `/sobre` | Premissas, contrato de IA e limitações |
 
 ## Setup
